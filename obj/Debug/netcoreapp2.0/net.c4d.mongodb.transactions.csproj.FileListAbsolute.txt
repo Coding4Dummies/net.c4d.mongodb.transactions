@@ -1,0 +1,3 @@
+/Users/Anton/Projects/Coding4Dummies/net.c4d.mongodb.transactions/obj/Debug/netcoreapp2.0/net.c4d.mongodb.transactions.csproj.CoreCompileInputs.cache
+/Users/Anton/Projects/Coding4Dummies/net.c4d.mongodb.transactions/obj/Debug/netcoreapp2.0/net.c4d.mongodb.transactions.AssemblyInfoInputs.cache
+/Users/Anton/Projects/Coding4Dummies/net.c4d.mongodb.transactions/obj/Debug/netcoreapp2.0/net.c4d.mongodb.transactions.AssemblyInfo.cs
