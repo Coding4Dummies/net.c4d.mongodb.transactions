@@ -1,16 +1,39 @@
 ﻿using System;
-using Microsoft.Extensions.Configuration;
-using Net.C4D.MongodbProvider;
+using System.Collections.Generic;
+using Net.C4D.Mongodb.Transactions.Ioc;
+using Net.C4D.Mongodb.Transactions.Orders;
+using Net.C4D.Mongodb.Transactions.Products;
+using Net.C4D.Mongodb.Transactions.Setup;
+using Net.C4D.Mongodb.Transactions.Mongo;
 
-namespace Net.C4D.Mongodb.Transactions {
-    class Program {
-        static void Main (string[] args) {
-            IConfiguration config = new ConfigurationBuilder ()
-                .AddJsonFile ("appsettings.json", true, true)
-                .Build ();
+namespace Net.C4D.Mongodb.Transactions
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            new ServicesInitializer().InitServices();
 
-            var mongodbProvider = new MongoDatabaseProvider (config["ConnectionStrings:DefaultConnetcion"]);
+            new TestDbInitializer().InitTestDb();
 
+            PerformDemoOrder();
+        }
+
+        static void PerformDemoOrder()
+        {
+            var productsRepository = ServicesContainer.GetService<MongoRepository<Product>>();
+            var ordersService = ServicesContainer.GetService<OrdersService>();
+
+            var productsForOrder = productsRepository.GetList(p => p.InStockAmmount > 0);
+
+            var orderProducts = new List<Tuple<Product, int>>();
+
+            foreach (var product in productsForOrder)
+            {
+                orderProducts.Add(new Tuple<Product, int>(product, 1));
+            }
+
+            ordersService.CreateOrder(Guid.NewGuid(), orderProducts);
         }
     }
 }
