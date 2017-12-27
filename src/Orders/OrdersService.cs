@@ -17,7 +17,7 @@ namespace Net.C4D.Mongodb.Transactions.Orders
             _transactionsService = ServicesContainer.GetService<TransactionsService>();
         }
 
-        public void CreateOrder(Guid customerId, List<Tuple<Product, int>> productsAndAmounts)
+        public void CreateOrder(Guid customerId, List<OrderedProduct> productsAndAmounts)
         {
             var createOrderTransaction = new Transaction();
             var createOrderTransactionCommands = new List<ICommand>();
@@ -33,9 +33,9 @@ namespace Net.C4D.Mongodb.Transactions.Orders
             createOrderTransactionCommands.AddRange(
                 productsAndAmounts.Select(t => new UpdateProductQuantityCommand
                 {
-                    ProductId = t.Item1.ProductId,
-                    Operator = CommandOperator.Substract,
-                    Value = t.Item2,
+                    Product = t.Product,
+                    Operator = CommandOperator.Add,
+                    Value = -t.Quantity,
                     TransactionId = createOrderTransaction.TransactionId
                 }));
 

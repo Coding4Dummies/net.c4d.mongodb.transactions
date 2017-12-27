@@ -14,9 +14,9 @@ namespace Net.C4D.Mongodb.Transactions.Orders
 
         public Guid CustomerId { get; set; }
 
-        public List<Tuple<Product, int>> ProductsAndQuantity { get; set; } //<product, ammount>
+        public List<OrderedProduct> ProductsAndQuantity { get; set; }
 
-        public List<Tuple<Guid, DateTime>> Transactions { get; set; } // <transaction id, "touched" date time>
+        public List<ExecutedTransaction> Transactions { get; set; }
 
         public OrderStatus Status { get; set; }
 
@@ -24,10 +24,10 @@ namespace Net.C4D.Mongodb.Transactions.Orders
         {
             OrderId = Guid.NewGuid();
             Status = OrderStatus.Pending;
-            Transactions = new List<Tuple<Guid, DateTime>>();
+            Transactions = new List<ExecutedTransaction>();
         }
 
-        public Order(Guid customerId, List<Tuple<Product, int>> products) : this()
+        public Order(Guid customerId, List<OrderedProduct> products) : this()
         {
             CustomerId = customerId;
             ProductsAndQuantity = products;

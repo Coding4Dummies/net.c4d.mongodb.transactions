@@ -3,12 +3,15 @@ using Net.C4D.Mongodb.Transactions.Commands;
 using MongoDB.Driver;
 using Net.C4D.Mongodb.Transactions.Ioc;
 using Net.C4D.Mongodb.Transactions.Mongo;
+using MongoDB.Bson;
+using System.Collections.Generic;
+using Net.C4D.Mongodb.Transactions.Transactions;
 
 namespace Net.C4D.Mongodb.Transactions.Products
 {
     public class UpdateProductQuantityCommand : ICommand
     {
-        public Guid ProductId { get; set; }
+        public Product Product { get; set; }
 
         public CommandOperator Operator { get; set; }
 
@@ -34,30 +37,29 @@ namespace Net.C4D.Mongodb.Transactions.Products
         public void Process(ICommand command)
         {
             var processedCommand = command as UpdateProductQuantityCommand;
+            var validCommandOperators = CommandOperator.Add | CommandOperator.SetValue;
 
-            if (processedCommand == null)
-                throw new InvalidOperationException("Unsupported command passed to processor");
+            if (processedCommand == null || !validCommandOperators.HasFlag(processedCommand.Operator))
+                throw new InvalidOperationException("Unsupported command or command-operator passed to processor");
 
             var collection = _productsRepository.MongoCollection;
-            var filterDefinition = Builders<Product>.Filter.Eq("ProductId", processedCommand.ProductId);
 
-            UpdateDefinition<Product> updateDefinition;
+            var filterObject = new BsonDocument("ProductId", processedCommand.Product.ProductId);
 
-            switch (processedCommand.Operator)
-            {
-                case CommandOperator.Add:
-                    updateDefinition = Builders<Product>.Update.Inc("InStockAmmount", processedCommand.Value);
-                    break;
-                case CommandOperator.Substract:
-                    updateDefinition = Builders<Product>.Update.Inc("InStockAmmount", -processedCommand.Value);
-                    break;
-                default:
-                    throw new InvalidOperationException("Unsupported operator passed to the command");
-            }
+            var commandUpdateOperator = processedCommand.Operator == CommandOperator.Add ? "$inc" : "$set";
 
-            updateDefinition.Push("Transactions", processedCommand.TransactionId);
+            var updateDefinitions = new BsonDocument(new Dictionary<string, object>{
+                { commandUpdateOperator, new BsonDocument("InStockAmmount", processedCommand.Value)},
+                {"$push", new BsonDocument(
+                    new Dictionary<string,object>{
+                        {"Transactions", new ExecutedTransaction(processedCommand.TransactionId, DateTime.Now).ToBsonDocument()}
+                    })
+                }
+            });
 
-            collection.FindOneAndUpdate(filterDefinition, updateDefinition);
+            var updateObject = new BsonDocument(updateDefinitions);
+
+            collection.FindOneAndUpdate(filterObject, updateObject);
         }
     }
 }

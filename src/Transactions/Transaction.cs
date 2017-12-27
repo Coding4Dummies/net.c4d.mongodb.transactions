@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using Net.C4D.Mongodb.Transactions.Commands;
 using Net.C4D.Mongodb.Transactions.Mongo;
-//using Newtonsoft.Json;
-using MongoDB.Bson;
-using MongoDB.Driver;
 
 namespace Net.C4D.Mongodb.Transactions.Transactions
 {

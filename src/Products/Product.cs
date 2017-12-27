@@ -17,12 +17,12 @@ namespace Net.C4D.Mongodb.Transactions.Products
 
         public int InStockAmmount { get; set; }
 
-        public List<Tuple<Guid, DateTime>> Transactions { get; set; } // <transaction id, "touched" date time>
+        public List<ExecutedTransaction> Transactions { get; set; }
 
         public Product()
         {
             ProductId = Guid.NewGuid();
-            Transactions = new List<Tuple<Guid, DateTime>>();
+            Transactions = new List<ExecutedTransaction>();
         }
     }
 }

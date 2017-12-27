@@ -8,6 +8,6 @@ namespace Net.C4D.Mongodb.Transactions.Mongo
     {
         [BsonId]
         [JsonIgnore]
-        public virtual ObjectId Id { get; set; }
+        public virtual ObjectId _id { get; set; }
     }
 }

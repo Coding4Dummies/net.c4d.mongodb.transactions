@@ -1,6 +1,10 @@
-﻿using MongoDB.Bson;
+﻿using System.Linq;
+using System.Reflection;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
+using Net.C4D.Mongodb.Transactions.Commands;
 
 namespace Net.C4D.Mongodb.Transactions.Mongo
 {
@@ -24,6 +28,16 @@ namespace Net.C4D.Mongodb.Transactions.Mongo
             };
 
             ConventionRegistry.Register("MongoDb Conventions", pack, t => true);
+
+            // Get all types that implements ICommand
+            var types = Assembly.GetExecutingAssembly()
+                .GetTypes()
+                .Where(type => type.IsClass && type.GetInterfaces().Contains(typeof(ICommand)));
+            // Register for Bson Deserialization
+            foreach (var type in types)
+            {
+                BsonClassMap.LookupClassMap(type);
+            }
         }
 
         public IMongoDatabase Create()

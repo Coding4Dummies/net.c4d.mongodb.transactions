@@ -26,11 +26,11 @@ namespace Net.C4D.Mongodb.Transactions
 
             var productsForOrder = productsRepository.GetList(p => p.InStockAmmount > 0);
 
-            var orderProducts = new List<Tuple<Product, int>>();
+            var orderProducts = new List<OrderedProduct>();
 
             foreach (var product in productsForOrder)
             {
-                orderProducts.Add(new Tuple<Product, int>(product, 1));
+                orderProducts.Add(new OrderedProduct(product, 1));
             }
 
             ordersService.CreateOrder(Guid.NewGuid(), orderProducts);

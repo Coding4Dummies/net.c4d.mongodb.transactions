@@ -4,6 +4,7 @@ using Net.C4D.Mongodb.Transactions.Commands;
 using Net.C4D.Mongodb.Transactions.Ioc;
 using Net.C4D.Mongodb.Transactions.Mongo;
 using Net.C4D.Mongodb.Transactions.Products;
+using Net.C4D.Mongodb.Transactions.Transactions;
 
 namespace Net.C4D.Mongodb.Transactions.Orders
 {
@@ -11,7 +12,7 @@ namespace Net.C4D.Mongodb.Transactions.Orders
     {
         public Guid CustomerId { get; set; }
 
-        public List<Tuple<Product, int>> Products { get; set; }
+        public List<OrderedProduct> Products { get; set; }
 
         public Guid TransactionId { get; set; }
     }
@@ -38,7 +39,7 @@ namespace Net.C4D.Mongodb.Transactions.Orders
                 throw new InvalidOperationException("Unsupported command passed to processor");
 
             var order = new Order(processedCommand.CustomerId, processedCommand.Products);
-            order.Transactions.Add(new Tuple<Guid, DateTime>(processedCommand.TransactionId, DateTime.Now));
+            order.Transactions.Add(new ExecutedTransaction(processedCommand.TransactionId, DateTime.Now));
 
             _ordersRepository.Insert(order);
         }
