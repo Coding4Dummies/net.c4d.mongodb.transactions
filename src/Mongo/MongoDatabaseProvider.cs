@@ -18,7 +18,6 @@ namespace Net.C4D.Mongodb.Transactions.Mongo
         private readonly string _connectionString;
         public MongoDatabaseProvider(string conncectionString)
         {
-
             _connectionString = conncectionString;
 
             // Set up MongoDB conventions
@@ -33,6 +32,7 @@ namespace Net.C4D.Mongodb.Transactions.Mongo
             var types = Assembly.GetExecutingAssembly()
                 .GetTypes()
                 .Where(type => type.IsClass && type.GetInterfaces().Contains(typeof(ICommand)));
+
             // Register for Bson Deserialization
             foreach (var type in types)
             {
@@ -48,5 +48,11 @@ namespace Net.C4D.Mongodb.Transactions.Mongo
 
             return client.GetDatabase(databaseName);
         }
+
+        public IMongoCollection<T> GetMongoCollection<T>()
+        {
+            return Create().GetCollection<T>(Inflector.Pluralize(typeof(T).Name));
+        }
+
     }
 }

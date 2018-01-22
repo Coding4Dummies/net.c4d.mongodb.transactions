@@ -5,54 +5,92 @@ using System.Linq;
 using Net.C4D.Mongodb.Transactions.Mongo;
 using Net.C4D.Mongodb.Transactions.Commands;
 using Net.C4D.Mongodb.Transactions.Ioc;
+using MongoDB.Bson;
+using MongoDB.Driver;
 
 namespace Net.C4D.Mongodb.Transactions.Transactions
 {
     public class TransactionsService
     {
-        private readonly MongoRepository<Transaction> _transactionsRepository;
+        private readonly IMongoCollection<Transaction> _transactionsCollection;
 
         private readonly List<ICommandProcessor> _commandsProcessors;
 
         public TransactionsService()
         {
-            _transactionsRepository = ServicesContainer.GetService<MongoRepository<Transaction>>();
+            _transactionsCollection = ServicesContainer.GetService<IMongoCollection<Transaction>>();
             _commandsProcessors = ServicesContainer.GetService<List<ICommandProcessor>>();
         }
 
-        public void CreateTransaction(Transaction transaction)
+        internal Transaction InitTransaction(List<ICommand> transactionCommands)
         {
-            _transactionsRepository.Insert(transaction);
+            if (transactionCommands == null || transactionCommands.Count == 0)
+                throw new ArgumentException("Commands can't be null or empty");
 
-            ProcessTransaction(transaction);
+            var transaction = new Transaction();
+
+            transaction.Commands = transactionCommands;
+            transaction._id = ObjectId.GenerateNewId();
+
+            _transactionsCollection.InsertOne(transaction);
+
+            return transaction;
         }
 
-        public void UpdateTransaction(Transaction transaction)
+        public void CommitTransaction(Transaction transaction)
         {
-            _transactionsRepository.Save(transaction);
+            ProcessTransaction(transaction, TransactionProcessAction.Commit);
+
+            transaction.Status = TransactionStatus.Completed;
+
+            _transactionsCollection.FindOneAndReplace<Transaction>(
+                t => t._id == transaction._id,
+                transaction
+            );
         }
 
-        public void ProcessTransaction(Transaction transaction)
+        public void RollBackTransaction(Transaction transaction)
         {
-            try
+            ProcessTransaction(transaction, TransactionProcessAction.RollBack);
+
+            transaction.Status = TransactionStatus.RolledBack;
+
+            _transactionsCollection.FindOneAndReplace<Transaction>(
+                t => t._id == transaction._id,
+                transaction
+            );
+        }
+
+        private void ProcessTransaction(Transaction transaction, TransactionProcessAction action)
+        {
+            if (transaction._id == null || transaction._id == ObjectId.Empty)
+                throw new ArgumentException("Only initialized transactions can be processed");
+
+            foreach (var command in transaction.Commands)
             {
-                foreach (var command in transaction.Commands)
+                var commandProcessor = _commandsProcessors.FirstOrDefault(p => p.CanProcess(command));
+
+                if (commandProcessor == null)
+                    throw new InvalidOperationException("Corresponding command processor was not initialized");
+
+                switch (action)
                 {
-                    var commandProcessor = _commandsProcessors.FirstOrDefault(p => p.CanProcess(command));
-
-                    if (commandProcessor == null)
-                        throw new InvalidOperationException("Corresponding processor was not found");
-
-                    commandProcessor.Process(command);
+                    case TransactionProcessAction.Commit:
+                        commandProcessor.Process(command, transaction);
+                        break;
+                    case TransactionProcessAction.RollBack:
+                        commandProcessor.RollBack(command, transaction);
+                        break;
+                    default:
+                        throw new ArgumentException("Argument must be provided", "TransactionProcessAction");
                 }
-                transaction.Status = TransactionStatus.Completed;
-                UpdateTransaction(transaction);
-            }
-            catch
-            {
-                transaction.Status = TransactionStatus.Error;
-                UpdateTransaction(transaction);
             }
         }
+    }
+
+    internal enum TransactionProcessAction
+    {
+        Commit,
+        RollBack
     }
 }

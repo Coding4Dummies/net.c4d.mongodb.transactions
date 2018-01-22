@@ -16,7 +16,7 @@ namespace Net.C4D.Mongodb.Transactions.Orders
 
         public List<OrderedProduct> ProductsAndQuantity { get; set; }
 
-        public List<ExecutedTransaction> Transactions { get; set; }
+        public List<Guid> Transactions { get; set; }
 
         public OrderStatus Status { get; set; }
 
@@ -24,7 +24,7 @@ namespace Net.C4D.Mongodb.Transactions.Orders
         {
             OrderId = Guid.NewGuid();
             Status = OrderStatus.Pending;
-            Transactions = new List<ExecutedTransaction>();
+            Transactions = new List<Guid>();
         }
 
         public Order(Guid customerId, List<OrderedProduct> products) : this()

@@ -17,12 +17,12 @@ namespace Net.C4D.Mongodb.Transactions.Products
 
         public int InStockAmmount { get; set; }
 
-        public List<ExecutedTransaction> Transactions { get; set; }
+        public List<Guid> Transactions { get; set; }
 
         public Product()
         {
             ProductId = Guid.NewGuid();
-            Transactions = new List<ExecutedTransaction>();
+            Transactions = new List<Guid>();
         }
     }
 }

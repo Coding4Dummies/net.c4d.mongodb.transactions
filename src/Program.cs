@@ -5,6 +5,7 @@ using Net.C4D.Mongodb.Transactions.Orders;
 using Net.C4D.Mongodb.Transactions.Products;
 using Net.C4D.Mongodb.Transactions.Setup;
 using Net.C4D.Mongodb.Transactions.Mongo;
+using MongoDB.Driver;
 
 namespace Net.C4D.Mongodb.Transactions
 {
@@ -21,10 +22,10 @@ namespace Net.C4D.Mongodb.Transactions
 
         static void PerformDemoOrder()
         {
-            var productsRepository = ServicesContainer.GetService<MongoRepository<Product>>();
+            var productsCollection = ServicesContainer.GetService<IMongoCollection<Product>>();
             var ordersService = ServicesContainer.GetService<OrdersService>();
 
-            var productsForOrder = productsRepository.GetList(p => p.InStockAmmount > 0);
+            var productsForOrder = productsCollection.Find(p => p.InStockAmmount > 0).ToList();
 
             var orderProducts = new List<OrderedProduct>();
 

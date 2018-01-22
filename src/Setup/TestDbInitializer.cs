@@ -6,40 +6,41 @@ using Net.C4D.Mongodb.Transactions.Orders;
 using Net.C4D.Mongodb.Transactions.Products;
 using Net.C4D.Mongodb.Transactions.Transactions;
 using Net.C4D.Mongodb.Transactions.Mongo;
+using MongoDB.Bson;
+using MongoDB.Driver;
+using System.Collections.Generic;
 
 namespace Net.C4D.Mongodb.Transactions.Setup
 {
     public class TestDbInitializer
     {
-        private readonly MongoRepository<Product> _productsRepository;
-        private readonly MongoRepository<Order> _ordersRepository;
-        private readonly MongoRepository<Transaction> _transactionsRepository;
+        private readonly IMongoCollection<Product> _productsCollection;
+        private readonly IMongoCollection<Order> _ordersCollection;
+        private readonly IMongoCollection<Transaction> _transactionsCollection;
 
         public TestDbInitializer()
         {
-            _productsRepository = ServicesContainer.GetService<MongoRepository<Product>>();
-            _ordersRepository = ServicesContainer.GetService<MongoRepository<Order>>();
-            _transactionsRepository = ServicesContainer.GetService<MongoRepository<Transaction>>();
+            _productsCollection = ServicesContainer.GetService<IMongoCollection<Product>>();
+            _ordersCollection = ServicesContainer.GetService<IMongoCollection<Order>>();
+            _transactionsCollection = ServicesContainer.GetService<IMongoCollection<Transaction>>();
         }
 
         public void InitTestDb()
         {
             ResetAllCollections();
-            InitDemoProducts();
+            InsertDemoProducts();
         }
 
         private void ResetAllCollections()
         {
-            _productsRepository.DeleteBulk(_productsRepository.GetList(p => true));
-            _ordersRepository.DeleteBulk(_ordersRepository.GetList(p => true));
-            _transactionsRepository.DeleteBulk(_transactionsRepository.GetList(p => true));
+            _productsCollection.DeleteMany(FilterDefinition<Product>.Empty);
+            _ordersCollection.DeleteMany(FilterDefinition<Order>.Empty);
+            _transactionsCollection.DeleteMany(FilterDefinition<Transaction>.Empty);
         }
 
-        void InitDemoProducts(int numberOfProducts = 5, int initialQuantity = 10)
+        void InsertDemoProducts(int numberOfProducts = 5, int initialQuantity = 10)
         {
-            var productsRepository = ServicesContainer.GetService<MongoRepository<Product>>();
-            var allExistingProducts = productsRepository.GetList(p => true);
-            productsRepository.DeleteBulk(allExistingProducts);
+            var sampleProducts = new List<Product>();
 
             for (int i = 0; i < numberOfProducts; i++)
             {
@@ -50,8 +51,10 @@ namespace Net.C4D.Mongodb.Transactions.Setup
                     InStockAmmount = initialQuantity
                 };
 
-                productsRepository.Insert(product);
+                sampleProducts.Add(product);
             }
+
+            _productsCollection.InsertMany(sampleProducts);
         }
     }
 }

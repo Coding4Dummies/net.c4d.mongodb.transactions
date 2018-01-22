@@ -7,6 +7,7 @@ using Net.C4D.Mongodb.Transactions.Orders;
 using Net.C4D.Mongodb.Transactions.Products;
 using Net.C4D.Mongodb.Transactions.Transactions;
 using Net.C4D.Mongodb.Transactions.Mongo;
+using MongoDB.Driver;
 
 namespace Net.C4D.Mongodb.Transactions.Setup
 {
@@ -22,15 +23,16 @@ namespace Net.C4D.Mongodb.Transactions.Setup
 
             var mongodbProvider = new MongoDatabaseProvider(config["ConnectionStrings:DefaultConnection"]);
 
-            ServicesContainer.RegisterService<MongoRepository<Order>>(new MongoRepository<Order>(mongodbProvider));
-            ServicesContainer.RegisterService<MongoRepository<Product>>(new MongoRepository<Product>(mongodbProvider));
-            ServicesContainer.RegisterService<MongoRepository<Transaction>>(new MongoRepository<Transaction>(mongodbProvider));
+            ServicesContainer.RegisterService<IMongoCollection<Order>>(mongodbProvider.GetMongoCollection<Order>());
+            ServicesContainer.RegisterService<IMongoCollection<Product>>(mongodbProvider.GetMongoCollection<Product>());
+            ServicesContainer.RegisterService<IMongoCollection<Transaction>>(mongodbProvider.GetMongoCollection<Transaction>());
 
             var commandsProcessors = new List<ICommandProcessor>();
             commandsProcessors.Add(new CreateOrderCommandProcessor());
             commandsProcessors.Add(new UpdateProductQuantityCommandProcessor());
 
             ServicesContainer.RegisterService<List<ICommandProcessor>>(commandsProcessors);
+
             ServicesContainer.RegisterService<TransactionsService>(new TransactionsService());
             ServicesContainer.RegisterService<OrdersService>(new OrdersService());
         }

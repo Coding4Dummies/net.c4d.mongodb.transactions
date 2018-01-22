@@ -19,15 +19,13 @@ namespace Net.C4D.Mongodb.Transactions.Orders
 
         public void CreateOrder(Guid customerId, List<OrderedProduct> productsAndAmounts)
         {
-            var createOrderTransaction = new Transaction();
             var createOrderTransactionCommands = new List<ICommand>();
 
             createOrderTransactionCommands.Add(
                 new CreateOrderCommand
                 {
                     CustomerId = customerId,
-                    Products = productsAndAmounts,
-                    TransactionId = createOrderTransaction.TransactionId
+                    Products = productsAndAmounts
                 });
 
             createOrderTransactionCommands.AddRange(
@@ -35,13 +33,19 @@ namespace Net.C4D.Mongodb.Transactions.Orders
                 {
                     Product = t.Product,
                     Operator = CommandOperator.Add,
-                    Value = -t.Quantity,
-                    TransactionId = createOrderTransaction.TransactionId
+                    Value = -t.Quantity
                 }));
 
-            createOrderTransaction.Commands = createOrderTransactionCommands;
+            var createOrderTransaction = _transactionsService.InitTransaction(createOrderTransactionCommands);
 
-            _transactionsService.CreateTransaction(createOrderTransaction);
+            try
+            {
+                _transactionsService.CommitTransaction(createOrderTransaction);
+            }
+            catch
+            {
+                _transactionsService.RollBackTransaction(createOrderTransaction);
+            }
         }
     }
 }

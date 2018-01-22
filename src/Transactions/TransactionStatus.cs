@@ -4,6 +4,7 @@ namespace Net.C4D.Mongodb.Transactions.Transactions
     {
         Pending,
         Completed,
+        RolledBack,
         Error
     }
 }
