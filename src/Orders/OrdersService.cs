@@ -41,6 +41,8 @@ namespace Net.C4D.Mongodb.Transactions.Orders
             try
             {
                 _transactionsService.CommitTransaction(createOrderTransaction);
+
+                //_transactionsService.RollBackTransaction(createOrderTransaction);
             }
             catch
             {
